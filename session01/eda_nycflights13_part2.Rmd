@@ -1,7 +1,7 @@
 ---
 title: 'Better flight experiences with data (airline delays in New York City)'
-author: "Nicholas J. Horton (Amherst College) and Ben Baumer (Smith College)"
-date: "December 7, 2015"
+author: "Your name goes here"
+date: "`r Sys.Date()`"
 output:
   html_document:
     toc: yes
@@ -12,9 +12,10 @@ output:
 
 
 ```{r include=FALSE}
-# This loads the mosaic and dplyr packages
+# This loads the necessary packages
 library(mosaic)
 library(lubridate)
+library(nycflights13)
 
 ```
 
@@ -38,9 +39,6 @@ Statistics students (and instructors) need experience wrestling with large, mess
 
 These five separate datasets can easily be merged (see the appendix for a list of the first few observations in each of these tables.)  More details and extended examples can be found at http://www.amherst.edu/~nhorton/precursors.
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE}
-require(mosaic); require(nycflights13)
-```
 
 ```{r echo=TRUE}
 # derive variables of interest...
@@ -60,15 +58,15 @@ foo <- filter(airports, faa %in% c('SFO', 'OAK', 'SJC'))
 foo
 ```
 
-How many flights are there to each airport in January, 2013?
+How many flights are there to each airport in January, 2013? Both as a number and as a percentage of total flights for that month
 
 ```{r echo=TRUE, results="asis"}
-airportcounts <- flights %>% 
-   filter(dest %in% c('SFO', 'OAK', 'SJC')) %>%
-   group_by(year, month, dest) %>%
-   summarise(count = n()) 
-filter(airportcounts, month==1)%>%
-  arrange(desc(count))
+flights |> 
+  filter(dest %in% c('SFO', 'OAK', 'SJC')) |>
+  group_by(year, month, dest) |>
+  summarise(count = n()) |> 
+  filter(month==1)|>
+  arrange(desc(count)) 
 ```
 
 Almost all are to San Francisco International (SFO).  Let's take a closer look at what carriers service this route.
@@ -78,12 +76,12 @@ airlines <- mutate(airlines, name=as.character(name), carrier=as.character(carri
 
 sfoflights <- inner_join(filter(flights, dest=="SFO"), airlines)
 
-fly_into_sfo <- sfoflights %>% 
-  group_by(name) %>% 
-  summarise(count = n()) %>% 
-  arrange(desc(count)) %>% 
+fly_into_sfo <- sfoflights |> 
+  group_by(name) |> 
+  summarise(count = n()) |> 
+  arrange(desc(count)) |> 
   mutate(
-    percent = round(100*count/sum(count),1)
+    percent = count/sum(count)
   )
 
 ggplot(fly_into_sfo, aes(x=reorder(name, count), y=count, fill=name))+
@@ -91,7 +89,7 @@ ggplot(fly_into_sfo, aes(x=reorder(name, count), y=count, fill=name))+
   coord_flip()+
   theme_bw()+
   labs(y="Number of flights to SFO", x="Carrier", title="Flights to SFO", subtitle = "(as % of total flights)")+
-    geom_label(aes(x=reorder(name, count), y=count, label = percent),
+    geom_label(aes(x=reorder(name, count), y=count, label = round(100*percent,1)),
              hjust = 1, 
              vjust = 0.5, 
              colour = "white", 
@@ -121,10 +119,10 @@ We also observe that a number of flights are missing their arrival delay.
 Those missing values are likely cancelled flights.  We might be interested in which month they occurred?
 
 ```{r echo=TRUE}
-sfoflights %>%
-  filter(is.na(arr_delay)) %>%
-  group_by(month) %>%
-  count() %>%
+sfoflights |>
+  filter(is.na(arr_delay)) |>
+  group_by(month) |>
+  count() |>
   ggplot(aes(x=factor(month), y = n))+
     geom_col() +
     theme_bw()+
@@ -168,36 +166,15 @@ Note that the distributions have been rescaled so that only those flights betwee
 The distributions appear to be somewhat symmetrically distributed around zero delays but with extremely long right tails.  Different information is conveyed in the two representations: the overlapping density plots provide a clear sense of the shape of the distributions but are somewhat crowded.  The boxplots make it easy to compare airline reliability, and to see the quantiles.
 
 
-#### Is there seasonality to the number of flights?
-
-We can consider whether the number of flights changes month by month.
-
-```{r, message=FALSE, echo=TRUE}
-sfocounts <- filter(airportcounts, dest=="SFO") %>%
-  mutate(Date = ymd(paste(year, "-", month, "-01", sep="")))
-
-ggplot(sfocounts, aes(x=Date, y=count))+
-  geom_point()+
-  geom_line()+
-  labs(
-    title="Flight to SFO in 2013 by month", 
-    x=" ",
-    y="Number of flights into SFO per month"
-  ) +
-  theme_bw()+
-  NULL
-```
-
-We observe that there are some interesting patterns over the course of the year for SFO: the number of flights in January, February, and March is considerably less than the other nine months.
 
 #### Predictors of delays
 
 How is month of flight associated with delays?  
 
 ```{r, echo=TRUE}
-sfocounts <- sfoflights %>% 
-  mutate(Date = ymd(paste(year, "-", month, "-01", sep=""))) %>%
-  group_by(Date) %>%
+sfocounts <- sfoflights |> 
+  mutate(Date = ymd(paste(year, "-", month, "-01", sep=""))) |>
+  group_by(Date) |>
   summarise(
     count = n(), 
     avgdelay = mean(realdelay))
@@ -285,12 +262,17 @@ Other factors affect airline delays.  This might include the weather.
 The `nycflights13` package in R includes other data scraped from the Internet (in this case detailed weather information).  We can display the temperature (in degrees Fahrenheit) on New Year's Day, 2013.
 
 ```{r echo=TRUE, results="asis"}
-select(weather, hour, hour, dewp, humid, wind_speed, wind_dir, precip, pressure) %>% head()
+weather |> 
+  select(hour, dewp, humid, wind_speed, wind_dir, precip, pressure) |> 
+  head()
 ```
 
 ```{r echo=TRUE}
 
-ggplot(data=filter(weather, month==1 & day==1), aes(x=hour, y=temp))+
+weather |> 
+  filter(month==1 & day==1) |> 
+  ggplot()+
+  aes(x=hour, y=temp)+
   geom_point()+
   geom_line()+
   labs(
@@ -306,13 +288,14 @@ ggplot(data=filter(weather, month==1 & day==1), aes(x=hour, y=temp))+
 Let's take a look at daily averages for delays as well as total precipation and maximum wind speed.  First we undertake the merge and display a set of values.
 
 ```{r, echo=TRUE, results="asis"}
-avgdelay <- flights %>%
-  group_by(month, day) %>%
-  filter(month < 13) %>%
+avgdelay <- flights |>
+  group_by(month, day) |>
+  filter(month < 13) |>
   summarise(avgdelay = mean(realdelay, na.rm=TRUE)) 
-precip <- weather %>%
-  group_by(month, day) %>%
-  filter(month < 13) %>%
+
+precip <- weather |>
+  group_by(month, day) |>
+  filter(month < 13) |>
   summarise(totprecip = sum(precip), maxwind = max(wind_speed))
 precip <- mutate(precip, anyprecip = ifelse(totprecip==0, "No", "Yes"))
 merged <- left_join(avgdelay, precip, by=c("day", "month"))

@@ -29,7 +29,7 @@ polls <- map(tables, . %>%
                janitor::clean_names())
 
 # list of relevant opinion polls
-polls[[4]]  #  table 4 on the page contains the list of all opinions polls
+polls[[5]]  #  table 4 on the page contains the list of all opinions polls
   
 # the dates of the opinion polls are given as, e.g. July 30 - August 2, 2024
 # We use a regular expression to extract the latest date and use that 
@@ -61,7 +61,7 @@ extract_latest_date <- function(date_string) {
 
 
 # manipulate- tidy data
-us_election_polls <- polls[[4]] %>%  # table 4 on the page contains the list of all opinions polls
+us_election_polls <- polls[[5]] %>%  # table 5 on the page contains the list of all opinions polls
   filter(poll_source != "") %>%
   mutate(
     # convert characters to numbers
@@ -80,12 +80,7 @@ us_election_polls <- polls[[4]] %>%  # table 4 on the page contains the list of 
   # Filter for polls after 2024-07-22, when Biden announced his official withdrawal 
   # and when Harris declared her candidacy for president. 
   filter(end_date > "2024-7-22") %>% 
-  
-  # separate sample size and likely audience
-  # LV = Likely voters, RV = Registered Voters, A = Adults
-  separate_wider_delim(samplesize_b, 
-                       delim = " ",
-                       names = c("sample_size", "audience")) %>% 
+
   
   # drop columns that are not needed
   select(-c(kamala_harris_democratic,

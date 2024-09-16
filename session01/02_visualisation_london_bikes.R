@@ -162,26 +162,6 @@ ggplot(bike, aes(x=mean_temp, y= bikes_hired, colour=season_name))+
   NULL
 
 
-
-temperature_by_season <- ggplot(bike, aes(x=mean_temp, y= bikes_hired,colour=season_name)) +
-  
-  # rather than using geom_point(), we use geom_point_interactive()
-  geom_point_interactive(aes( 
-                             tooltip = glue::glue("Mean Temp: {mean_temp}\nBikes Hired: {bikes_hired}\nDate: {date}")),
-                         alpha = 0.3) +
-  geom_smooth_interactive(se = FALSE, method = lm)+
-  theme_bw()+
-  facet_wrap(~season_name, ncol=1)+
-#  facet_grid(season_name ~ weekend)+
-
-    theme(legend.position = "none")+
-  NULL
-
-# you have created the ggplot object, you now pass it to
-girafe(
-  ggobj = temperature_by_season
-)
-
 ######
 ggplot(bike, aes(x=humidity, y= bikes_hired))+
   geom_point()+
@@ -194,6 +174,7 @@ ggplot(bike, aes(x=humidity, y= bikes_hired, colour=season_name))+
   geom_smooth(method = "lm")+
   theme_bw()+
   facet_wrap(~season_name, ncol=1)+
+  theme(legend.position = "none")+
   NULL
 
 ggplot(bike, aes(x=pressure, y= bikes_hired))+

@@ -29,32 +29,34 @@ The `babynames` data table in the `babynames` package comes from the Social Secu
 ## 1. How many babies are represented?
 
 ```{r eval=TRUE}
-babynames %>%
+babynames |>
   summarise(total = sum(n)) # a reduction verb
 ```
 
 ## 2. How many babies are there in each year?
 
 ```{r eval=TRUE}
-babynames %>% 
-  group_by(year) %>% 
+babynames |> 
+  group_by(year) |> 
   summarise(total= sum(n))
+
+
 ```
 Can you plot the total number of names (and hence births) by year?
 
 ## 3. How many distinct names in each year?
 
 ```{r eval=TRUE}
-babynames %>%
-  group_by(year) %>%
+babynames |>
+  group_by(year) |>
   summarise(name_count = n_distinct(name))
 ```
 
 ## 4. How many distinct names of each sex in each year?
 
 ```{r eval=TRUE}
-babynames %>%
-  group_by(year, sex) %>%
+babynames |>
+  group_by(year, sex) |>
   summarise(name_count = n_distinct(name)) 
 ```
 
@@ -66,9 +68,9 @@ Do boys or girls have similar number of distinct names? Plot `name_count` by `ye
 
 ```{r eval=TRUE}
 Result <-
-  babynames %>%
-  filter(name %in% c("Jane", "Mary")) %>% # just the Janes and Marys
-  group_by(year, name) %>% # for each year for each name
+  babynames |>
+  filter(name %in% c("Jane", "Mary")) |> # just the Janes and Marys
+  group_by(year, name) |> # for each year for each name
   summarise(count = sum(n))
 ```
 
@@ -84,11 +86,12 @@ Put `year` on the x-axis and the count of each name on the y-axis.
 ```{r eval=TRUE}
 
 ggplot(Result, aes(x= year, y=count,colour = name)) +
-  geom_line(size = 2) +
+  geom_line(size = 1.5) +
   labs(
     title = "Names over time", 
     x="Year", 
     y= "Yearly Births") +
+  theme_bw()+
   geom_vline(xintercept=1962)
 ```
 
@@ -99,10 +102,10 @@ ggplot(Result, aes(x= year, y=count,colour = name)) +
 ```{r eval=TRUE}
 
 Result2 <-
-  babynames %>%
-  group_by(year) %>%
-  mutate(total = sum(n)) %>%
-  filter(name %in% c("Mary", "Jane")) %>%
+  babynames |>
+  group_by(year) |>
+  mutate(total = sum(n)) |>
+  filter(name %in% c("Mary", "Jane")) |>
   mutate(proportion = n / total)
 
 head(Result2)
@@ -113,11 +116,11 @@ Why is sex a variable in Result2? Eliminate it, keeping just the girls.
 
 ```{r}
 Result2 <-
-  babynames %>%
-  filter(sex == "F") %>%
-  group_by(year) %>%
-  mutate(total = sum(n)) %>%
-  filter(name %in% c("Mary", "Jane")) %>%
+  babynames |>
+  filter(sex == "F") |>
+  group_by(year) |>
+  mutate(total = sum(n)) |>
+  filter(name %in% c("Mary", "Jane")) |>
   mutate(proportion = n / total)
 
 ```

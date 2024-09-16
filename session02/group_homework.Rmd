@@ -1,5 +1,5 @@
 ---
-title: "Session 4: Homework 2"
+title: "Group Homework"
 author: "Study group and members' names go here"
 date: "`r Sys.Date()`"
 output:
@@ -123,14 +123,8 @@ trendline. To do that, we first need to create a new variable called
 `date` in order to ensure that the `delta` values are plot
 chronologically.
 
-> In the following chunk of code, I used the `eval=FALSE` argument,
-> which does not run a chunk of code; I did so that you can knit the
-> document before tidying the data and creating a new dataframe
-> `tidyweather`. When you actually want to run this code and knit your
-> document, you must delete `eval=FALSE`, **not just here but in all
-> chunks were `eval=FALSE` appears.**
 
-```{r scatter_plot, eval=FALSE}
+```{r scatter_plot}
 
 tidyweather <- tidyweather %>%
   mutate(date = ymd(paste(as.character(Year), Month, "1")),
@@ -172,7 +166,7 @@ We remove data before 1800 and before using `filter`. Then, we use the
 information on which period each observation belongs to. We can assign
 the different periods using `case_when()`.
 
-```{r intervals, eval=FALSE}
+```{r intervals}
 
 comparison <- tidyweather %>% 
   filter(Year>= 1881) %>%     #remove years prior to 1881
@@ -195,7 +189,7 @@ to study the distribution of monthly deviations (`delta`), grouped by
 the different time periods we are interested in. Set `fill` to
 `interval` to group and colour the data by different time periods.
 
-```{r density_plot, eval=FALSE}
+```{r density_plot}
 
 
 
@@ -206,7 +200,7 @@ be interested in average annual anomalies. We can do this by using
 `group_by()` and `summarise()`, followed by a scatter plot to display
 the result.
 
-```{r averaging, eval=FALSE}
+```{r averaging}
 
 #creating yearly averages
 average_annual_anomaly <- tidyweather %>% 
@@ -246,7 +240,7 @@ with the `infer` package. Recall that the dataframe `comparison` has
 already grouped temperature anomalies according to time intervals; we
 are only interested in what is happening between 2011-present.
 
-```{r, calculate_CI_using_formula, eval=FALSE}
+```{r, calculate_CI_using_formula}
 
 formula_ci <- comparison %>% 
 
@@ -271,38 +265,6 @@ formula_ci
 As we saw in class, fivethirtyeight.com has detailed data on [all polls
 that track the president's
 approval](https://projects.fivethirtyeight.com/biden-approval-ratings)
-
-```{r, cache=TRUE}
-# Import approval polls data directly off fivethirtyeight website
-approval_polllist <- read_csv('https://projects.fivethirtyeight.com/biden-approval-data/approval_polllist.csv') |> 
-  
-  # Use `lubridate` to get two new columns, one for year and one for week number 
-  mutate(
-    year = lubridate::year(end_date),
-    week = lubridate::isoweek(end_date),
-    
-    # create a new column for net approval rate
-    net_approval = approve - disapprove
-    
-  )
-
-glimpse(approval_polllist)
-
-```
-
-## Create a plot
-
-What I would like you to do is to calculate the average net approval
-rate (approve- disapprove) for each week since he got into office. I
-want you plot the net approval for each week in 2023 along with its 95%
-confidence interval. There are various dates given for each poll, please
-use `enddate`, i.e., the date the poll ended. Your plot should look
-something like this, and you may find `geom_ribbon()` useful:
-
-```{r trump_margins, echo=FALSE, out.width="100%"}
-knitr::include_graphics(here::here("images", "biden_approval_margin.png"), error = FALSE)
-```
-
 
 # Money in UK politics
 

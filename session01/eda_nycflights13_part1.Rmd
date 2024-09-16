@@ -1,7 +1,7 @@
 ---
 title: 'Setting the stage for data science: integration of data management skill using the New York flights package (nycflights13)'
-author: "Nicholas J. Horton, Benjamin S. Baumer, and Hadley Wickham"
-date: "March 31, 2015"
+author: "Your name goes here"
+date: "`r Sys.Date()`"
 output:
   html_document:
     fig_height: 3
@@ -16,10 +16,9 @@ output:
 
 
 ```{r include=FALSE}
-require(tidyverse)
-require(mosaic)
-require(ggformula)
-trellis.par.set(theme=theme.mosaic())  
+library(tidyverse)
+library(mosaic)
+library(ggformula)
 
 # knitr settings to control how R chunks work.
 require(knitr)
@@ -29,10 +28,6 @@ opts_chunk$set(
 )
 ```
 
-```{r, include=FALSE}
-# Load additional packages here.  Uncomment the line below to use Project MOSAIC data sets.
-# require(mosaicData)   
-```
 
 Many have argued that we need additional facility to express statistical computations. 
 By using commonplace tools for data management, visualization, and reproducible analysis in data science and applying these to real-world scenarios, we prepae to think statistically.  In an era of increasingly big data, it is imperative that we develop data-related capacities, beginning early on. We believe that the integration of these precursors to data science into our curricula-early and often-will help statisticians be part of the dialogue regarding *Big Data and Big Questions*.
@@ -48,12 +43,13 @@ Specifically, through our shared experience working in industry, government, pri
 We illustrate how these five elements can be addressed using the `nycflights13` package, which includes five dataframes (airlines, airports, planes, flights, weather) that can be accessed within R).  
 
 ```{r, echo=TRUE, eval=TRUE, message=FALSE}
-require(nycflights13)
-airlines
-airports
-planes
-flights
-weather
+library(nycflights13)
+
+glimpse(airlines)
+glimpse(airports)
+glimpse(planes)
+glimpse(flights)
+glimpse(weather)
 ```
 
 
@@ -89,21 +85,23 @@ You use this dataset to address questions that they find real and relevant. (It 
 
 #### Filtering observations
 
-We start with an analysis focused on three smaller airports in the Northeast.  This illustrates the use of `filter()`, which allows the specification of a subset of rows of interest in the `airports` table (or dataset).  We first start by exploring the `airports` table.  Suppose we wanted to find out which airports certain codes belong to?
+We start with an analysis focused on three airports.  This illustrates the use of `filter()`, which allows the specification of a subset of rows of interest in the `airports` table (or dataset).  We first start by exploring the `airports` table.  Suppose we wanted to find out which airports certain codes belong to?
 
 ```{r warning=FALSE}
-filter(airports, faa %in% c('ALB', 'BDL', 'BTV'))   
+
+airports |> 
+  filter(faa %in% c('SFO', 'LAX', 'MIA'))   
 ```
 
 #### Aggregating observations
 
-Next we aggregate the counts of flights at all three of these airports at the monthly level (in the `ontime` flight-level table), using the `group_by()` and `summarise()` functions.   The `collect()` function forces the evaluation.  These functions are connected using the `%>%` operator.  This pipes the results from one object or function as input to the next in an efficient manner.
+Next we aggregate the counts of flights at all three of these airports at the monthly level (in the `ontime` flight-level table), using the `group_by()` and `summarise()` functions.   The `collect()` function forces the evaluation.  These functions are connected using the `|>` operator.  This pipes the results from one object or function as input to the next in an efficient manner.
 ```{r}
-airportcounts <- flights %>% 
-   filter(dest %in% c('ALB', 'BDL', 'BTV')) %>%
-   group_by(year, month, dest) %>%
-   summarise(count = n()) %>% 
-   collect()
+airportcounts <- flights |> 
+   filter(dest %in% c('SFO', 'LAX', 'MIA')) |>
+   group_by(year, month, dest) |>
+   summarise(count = n()) 
+
 ```
 
 #### Creating new derived variables
@@ -112,7 +110,7 @@ Next we add a new column by constructing a date variable (using `mutate()` and h
 
 ```{r, message=FALSE}
 library(lubridate)
-airportcounts <- airportcounts %>%
+airportcounts <- airportcounts |>
   mutate(Date = ymd(paste(year, "-", month, "-01")))
 head(airportcounts) # list only the first six observations
 
@@ -129,54 +127,58 @@ ggplot(airportcounts, aes(x=Date, y=count, colour=dest))+
 
 Figure 2: Comparison of the number of flights arriving at three airports by month in 2013.
 
-We observe in Figure 2 that there are some interesting patterns over time for these airports.  Burlington has the largest number of flights. 
+We observe in Figure 2 that there are some interesting patterns over time for these airports. 
 
 #### Sorting and selecting
 
 Another important verb is `arrange()`, which in conjunction with `head()` lets us display the months with the largest number of flights.  Here we need to use `ungroup()`, since otherwise the data would remain aggregated by year, month, and destination.
 ```{r}
-airportcounts %>%
-  ungroup() %>%
-  arrange(desc(count)) %>% 
-  select(count, year, month, dest) %>% 
+airportcounts |>
+  ungroup() |>
+  arrange(desc(count)) |> 
+  select(count, year, month, dest) |> 
   head() 
 ```
 
-We can compare flight delays between two airlines serving a city pair.  For example, which airline was most reliable flying from New York to Minneapolis/St. Paul (MSP) in January, 2013?  Here we demonstrate how to calculate an average delay for each day . We create the analytic dataset through use of ${\tt select()}$ (to pick the variables to be included), `filter()` (to select a tiny subset of the observations), and then repeat the previous aggregation. 
+We can compare flight delays between two airlines serving a city pair.  For example, which airline was most reliable flying from New York to SN Francisco (SFO) in January, 2013?  Here we demonstrate how to calculate an average delay for each day . We create the analytic dataset through use of ${\tt select()}$ (to pick the variables to be included), `filter()` (to select a tiny subset of the observations), and then repeat the previous aggregation. 
 
 ```{r, warning=FALSE}
-delays <- flights %>% 
-  select(origin, dest, year, month, day, carrier, arr_delay) %>%
-  filter(dest == 'MSP' & month == 1) %>%
-  group_by(year, month, day, carrier) %>%
-  summarise(meandelay = mean(arr_delay), count = n()) 
+delays <- flights |> 
+  select(origin, dest, year, month, day, carrier, arr_delay) |>
+  filter(dest == 'SFO' & month == 1) |>
+  group_by(year, month, day, carrier) |>
+  summarise(meandelay = mean(arr_delay), 
+            count = n()) 
+
 options(digits=3)
+
 favstats(~ meandelay, data=delays)
 
-ggplot(delays, aes(x=carrier, y = meandelay))+
+ggplot(delays, aes(y=carrier, x = meandelay))+
   geom_boxplot()+
   theme_bw()+
+  labs(title = "Mean Delay for flights from NYC to SFO")
   NULL
 
 ```
 
-#### Merging 
+#### Joing data sets 
 
-Merging is another key capacity to master.  Here, the full carrier names are merged (or joined, in database parlance) to facilitate the comparison, using the `left_join()` function to provide the actual airline name, rather than the terse airline code in the legend of the figure.
+Joining data sets is another key capacity to master.  Here, the full carrier names are merged (or joined, in database parlance) to facilitate the comparison, using the `left_join()` function to provide the actual airline name, rather than the terse airline code in the legend of the figure.
 
 ```{r, warning=FALSE}
 merged <- left_join(delays, airlines, by=c("carrier" = "carrier")) 
-head(merged) 
+
 favstats(meandelay ~ name, data=merged)
 
 
-ggplot(merged, aes(x=name, y = meandelay))+
+ggplot(merged, aes(y=name, x = meandelay))+
   geom_boxplot()+
   theme_bw()+
   NULL
 
-ggplot(merged, aes(x= meandelay, fill=name, alpha = 0.3))+
-  geom_density()+
+ggplot(merged, aes(x= meandelay, fill=name))+
+  geom_density(alpha = 0.3)+
   labs(
    x="Average daily delay by carrier (in minutes)" 
   )+
@@ -185,12 +187,12 @@ ggplot(merged, aes(x= meandelay, fill=name, alpha = 0.3))+
 
 ```
 
-Figure 3: Comparison of mean flight delays from New York to Minneapolis/St. Paul in January, 2013 
+Figure 3: Comparison of mean flight delays from New York to SFO in January, 2013 
 
-We see in Figure 3 that the airlines are fairly reliable, though there were some days with average delays of 60 minutes or more.
+We see in Figure 3 that the airlines are fairly reliable, though there were some days with average delays of 30 minutes or more.
 ```{r}
-merged %>% 
-  filter(meandelay > 60) %>% 
+merged  |>  
+  filter(meandelay > 30) |> 
   arrange(desc(meandelay))
 ```
 
@@ -205,7 +207,7 @@ filter(planes, tailnum=="N355NB")
 We see that this is an Airbus 319-- how often did this specific airplane fly through NYC in 2013?
 
 ```{r}
-singleplane <- filter(flights, tailnum=="N355NB") %>% 
+singleplane <- filter(flights, tailnum=="N355NB") |> 
   select(year, month, day, dest, origin, distance) 
 head(singleplane)
 sum(~ distance, data=singleplane)
@@ -213,10 +215,10 @@ sum(~ distance, data=singleplane)
 This Airbus A319 has been very active, with 128 flights just in 2013 in the New York City area.
 
 ```{r}
-singleplane %>%
-  group_by(dest) %>%
-  summarise(count = n()) %>% 
-  arrange(desc(count)) %>%
+singleplane |>
+  group_by(dest) |>
+  summarise(count = n()) |> 
+  arrange(desc(count)) |>
   filter(count > 5)
 ```
 
@@ -227,14 +229,14 @@ Linkage to other data scraped from the Internet (e.g. detailed weather informati
 ```{r}
 head(weather)
 
-avgdelay <- flights %>%
-  group_by(month, day) %>%
-  filter(month < 13) %>%
+avgdelay <- flights |>
+  group_by(month, day) |>
+  filter(month < 13) |>
   summarise(avgdelay = mean(arr_delay, na.rm=TRUE)) 
 
-precip <- weather %>%
-  group_by(month, day) %>%
-  filter(month < 13) %>%
+precip <- weather |>
+  group_by(month, day) |>
+  filter(month < 13) |>
   summarise(totprecip = sum(precip), maxwind = max(wind_speed))
 
 precip <- mutate(precip, anyprecip = ifelse(totprecip==0, "No", "Yes"))
