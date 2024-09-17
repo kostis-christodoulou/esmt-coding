@@ -19,6 +19,8 @@ library(babynames)
 library(mosaic)
 library(tidyverse)
 
+glimpse(babynames)
+
 ```
 
 Each year, the US Social Security Administration publishes a list of the most popular names given to babies.  In 2018, [the list](http://www.ssa.gov/oact/babynames/#ht=2) shows Emma and Olivia leading for girls, Liam and Noah for boys.
@@ -43,6 +45,10 @@ babynames |>
 
 ```
 Can you plot the total number of names (and hence births) by year?
+```{r}
+
+
+```
 
 ## 3. How many distinct names in each year?
 
@@ -58,6 +64,17 @@ babynames |>
 babynames |>
   group_by(year, sex) |>
   summarise(name_count = n_distinct(name)) 
+
+
+# plot it
+babynames |>
+  group_by(year, sex) |>
+  summarise(name_count = n_distinct(name)) |> 
+  ggplot()+
+  aes(x= year, y= name_count, colour=sex)+
+  geom_line()
+
+
 ```
 
 Do boys or girls have similar number of distinct names? Plot `name_count` by `year`, coloured by `sex`
@@ -136,6 +153,44 @@ ggplot(Result2, aes(x= year, y=proportion,colour = name)) +
 ```
 
   
-## 8. Pick out name(s) of interest to you 
+## 8. How has the sex ratio of babies (Females vs Males) changed over time 
+```{r}
 
-Plot out their popularity over time.
+
+
+babynames |> 
+  group_by(year, sex)  |> 
+  summarise(total = sum(n)) |> 
+  mutate(prop =total/sum(total)) |> 
+  ggplot()+
+  aes(x = year, y = prop, colour = sex)+
+  geom_point()
+
+
+```
+
+Plot out the most popular names
+```{r}
+babynames %>%
+  group_by(name, sex) %>%
+  summarise(total = sum(n)) %>%
+  arrange(desc(total))
+
+
+babynames %>%
+  filter(year>2016) |> 
+  group_by(name, sex) %>%
+  summarise(total = sum(n)) %>%
+  arrange(desc(total)) %>%
+  ungroup() %>%
+  slice(1:20) %>%
+  ggplot() +
+  aes(y = fct_reorder(name, total), x = total, fill = sex) +
+  geom_col() +
+  theme_bw() +
+  scale_x_continuous(label = scales::number)+
+  labs(x=NULL, y = NULL)
+
+
+```
+
